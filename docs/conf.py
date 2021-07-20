@@ -443,17 +443,30 @@ directives.register_directive('jsontableschemainclude', JSONTableSchemaInclude)
 # Generate an ERD
 
 import jts_erd
+import copy
 with open('../datapackage.json', 'r') as f:
-        j = json.load(f)
+        datapackage = json.load(f)
+with open('../core_tables.txt', 'r') as f:
+        core_tables = [i.strip() for i in f.read().split("\n") if i.strip()]
 
 jts_erd.save_svg(
-        j,
+        datapackage,
         'assets/entity_relationship_diagram.svg',
         display_columns=True,
         display_indexes=True,
         rankdir='RL',
     )
 
+datapackage_core_tables_only = copy.deepcopy(datapackage)
+datapackage_core_tables_only['resources'] = [i for i in datapackage_core_tables_only['resources'] if i['name'] in core_tables]
+
+jts_erd.save_svg(
+    datapackage_core_tables_only,
+    'assets/entity_relationship_diagram_core_tables.svg',
+    display_columns=True,
+    display_indexes=True,
+    rankdir='RL',
+)
 
 def setup(app):
     app.add_javascript("custom.js")
@@ -462,3 +475,4 @@ def setup(app):
     global html_static_path
     for file in glob.glob("../api-specification/_data/api-commons/*.yaml"):
         html_static_path = html_static_path + [file]
+
